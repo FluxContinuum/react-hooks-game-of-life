@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import './GameBoard.css';
 import GameCell from './GameCell';
 
@@ -66,28 +66,6 @@ const evalNeighbors = (x, y, grid) => {
 	return neighbors;
 }
 
-const getNewGrid = (rows, cols, grid) => {
-	let newGrid = createGrid(rows, cols);
-
-	for (let x = 0; x < cols; x++){
-		for (let y = 0; y < rows; y++){
-			const neighbors = evalNeighbors(x, y, grid);
-
-			if (grid[x][y]){
-				if (neighbors === 2 || neighbors === 3){
-					newGrid[x][y] = true;
-				}else{
-					newGrid[x][y] = false;
-				}
-			}else if(!grid[x][y] && neighbors === 3){
-				newGrid[x][y] = true;
-			}
-		}
-	}
-
-	return newGrid;
-}
-
 function GameBoard() {
 	const [width, setWidth] = useState(800);
 	const [height, setHeight] = useState(600);
@@ -128,7 +106,7 @@ function GameBoard() {
 		return () => {
 			clearTimeout(timeout);
 		}
-	}, [grid]);
+	}, [grid, rows, cols, gameInterval]);
 
 	return (
     <div>
