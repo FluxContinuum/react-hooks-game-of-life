@@ -5,11 +5,11 @@ import GameCell from './GameCell';
 const createGrid = (rows, cols, isRandom=false) => {
 	let grid = [];
 
-	for (let x = 0; x < cols; x++){
-		grid[x] = [];
+	for (let y = 0; y < rows; y++){
+		grid[y] = [];
 
-		for (let y = 0; y < rows; y++){
-			grid[x][y] = isRandom	? (Math.random() >= 0.5) : false;
+		for (let x = 0; x < cols; x++){
+			grid[y][x] = isRandom	? (Math.random() >= 0.5) : false;
 		}
 	}
 
@@ -17,14 +17,14 @@ const createGrid = (rows, cols, isRandom=false) => {
 }
 
 const createCells = grid => {
-	const rows = grid[0].length;
-	const cols = grid.length;
+	const rows = grid.length;
+	const cols = grid[0].length;
 
 	let cells = [];
 
-	for (let x = 0; x < cols; x++){
-		for (let y = 0; y < rows; y++){
-			if (grid[x][y]){
+	for (let y = 0; y < rows; y++){
+		for (let x = 0; x < cols; x++){
+			if (grid[y][x]){
 				cells.push({ x, y });
 			}
 		}
@@ -35,16 +35,16 @@ const createCells = grid => {
 
 const evalNeighbors = (x, y, grid) => {
 	const directions = [[-1, -1], [-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1]];
-	const rows = grid[0].length;
-	const cols = grid.length;
+	const rows = grid.length;
+	const cols = grid[0].length;
 
 	let neighbors = 0;
 
 	directions.forEach(cell => {
-		const neighborX = x + cell[0];
-		const neighborY = y + cell[1];
+		const neighborX = x + cell[1];
+		const neighborY = y + cell[0];
 
-		if (neighborX >= 0 && neighborX < cols && neighborY >= 0 && neighborY < rows && grid[neighborX][neighborY]){
+		if (neighborX >= 0 && neighborX < cols && neighborY >= 0 && neighborY < rows && grid[neighborY][neighborX]){
 			neighbors++;
 		}
 	});
@@ -68,18 +68,18 @@ function GameBoard() {
 	useEffect(() => {
 		let newGrid = createGrid(rows, cols);
 
-		for (let x = 0; x < cols; x++){
-			for (let y = 0; y < rows; y++){
+		for (let y = 0; y < rows; y++){
+			for (let x = 0; x < cols; x++){
 				const neighbors = evalNeighbors(x, y, grid);
 
-				if (grid[x][y]){
+				if (grid[y][x]){
 					if (neighbors === 2 || neighbors === 3){
-						newGrid[x][y] = true;
+						newGrid[y][x] = true;
 					}else{
-						newGrid[x][y] = false;
+						newGrid[y][x] = false;
 					}
-				}else if(!grid[x][y] && neighbors === 3){
-					newGrid[x][y] = true;
+				}else if(!grid[y][x] && neighbors === 3){
+					newGrid[y][x] = true;
 				}
 			}
 		}
