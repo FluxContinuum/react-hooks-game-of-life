@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import './GameBoard.css';
 import GameCell from './GameCell';
 
+const WIDTH = 1200;
+const HEIGHT = 600;
+const CELL_SIZE = 5;
+const ROWS = HEIGHT / CELL_SIZE;
+const COLS = WIDTH / CELL_SIZE;
+
 const createGrid = (rows, cols, isRandom=false) => {
 	let grid = [];
 
@@ -17,7 +23,7 @@ const createGrid = (rows, cols, isRandom=false) => {
 }
 
 const createCells = grid => {
-	const rows = grid.length;
+/*	const rows = grid.length;
 	const cols = grid[0].length;
 
 	let cells = [];
@@ -29,6 +35,15 @@ const createCells = grid => {
 			}
 		}
 	}
+*/
+	const cells = grid.flatMap((row, y) => {
+		return row.reduce((living, col, x) => {
+			if (col){
+				living.push({ x,y });
+			}
+			return living;
+		}, []);
+	});
 
 	return cells;
 }
@@ -53,51 +68,58 @@ const evalNeighbors = (x, y, grid) => {
 }
 
 function GameBoard() {
-	const [width, setWidth] = useState(800);
-	const [height, setHeight] = useState(600);
-	const [cellSize, setCellSize] = useState(10);
 	const [running, setRunning] = useState(false);
 	const [gameInterval, setGameInterval] = useState(100);
 
-	const rows = height / cellSize;
-	const cols = width / cellSize;
-
-	const [grid, setGrid] = useState(createGrid(rows, cols, true));
+	const [grid, setGrid] = useState(createGrid(ROWS, COLS, true));
 	const [cells, setCells] = useState(createCells(grid));
 
+	// set cells when grid updates
 	useEffect(() => {
-		let newGrid = createGrid(rows, cols);
+		setCells(createCells(grid));
+	}, [grid]);
 
-		for (let y = 0; y < rows; y++){
-			for (let x = 0; x < cols; x++){
-				const neighbors = evalNeighbors(x, y, grid);
+	// main game loop
+	useEffect(() => {
+		if (running){
+			let newGrid = createGrid(ROWS, COLS);
 
-				if (grid[y][x]){
-					if (neighbors === 2 || neighbors === 3){
+			for (let y = 0; y < ROWS; y++){
+				for (let x = 0; x < COLS; x++){
+					const neighbors = evalNeighbors(x, y, grid);
+
+					if (grid[y][x]){
+						if (neighbors === 2 || neighbors === 3){
+							newGrid[y][x] = true;
+						}else{
+							newGrid[y][x] = false;
+						}
+					}else if(!grid[y][x] && neighbors === 3){
 						newGrid[y][x] = true;
-					}else{
-						newGrid[y][x] = false;
 					}
-				}else if(!grid[y][x] && neighbors === 3){
-					newGrid[y][x] = true;
 				}
 			}
-		}
 
-		const timeout = setTimeout(() => {
-			setGrid(newGrid);
-			setCells(createCells(newGrid));
-		}, gameInterval);
+			const timeout = setTimeout(() => {
+				setGrid(newGrid);
+			}, gameInterval);
 
-		return () => {
-			clearTimeout(timeout);
+			return () => {
+				clearTimeout(timeout);
+			}
 		}
-	}, [grid, rows, cols, gameInterval]);
+	}, [grid, gameInterval, running]);
 
 	return (
     <div>
-      <div className="game-board" style={{ width: width, height: height, backgroundSize: `${cellSize}px ${cellSize}px`}} >
-        { cells.map(cell => <GameCell size={cellSize} x={cell.x} y={cell.y} key={`${cell.x},${cell.y}`} />) }
+      <div className="game-board" style={{ width: WIDTH, height: HEIGHT, backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`}} >
+        { cells.map(cell => <GameCell size={CELL_SIZE} x={cell.x} y={cell.y} key={`${cell.x},${cell.y}`} />) }
+      </div>
+      <div>
+      	<span style={{fontSize: 'calc(10px + 1vmin)'}}>Game Interval:</span> <input value={gameInterval} onChange={ev => setGameInterval(ev.target.value)} />
+      	<button className="button-control" onClick={() => setRunning(!running)}> {running ? 'Stop' : 'Start'} </button>
+      	<button className="button-control" onClick={() => setGrid(createGrid(ROWS, COLS, true))}> Randomize </button>
+      	<button className="button-control" onClick={() => setGrid(createGrid(ROWS, COLS))}> Empty </button>
       </div>
     </div>
 	);
