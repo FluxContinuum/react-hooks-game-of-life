@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { createRef, useEffect, useReducer } from 'react';
 import './GameBoard.css';
 import GameCell from './GameCell';
 
@@ -48,6 +48,13 @@ const evalNeighbors = (x, y, grid) => {
 	return neighbors;
 }
 
+const getGridCoords = (event, elem) => {
+	const x = Math.floor((event.clientX - elem.current.offsetLeft) / CELL_SIZE);
+	const y = Math.floor((event.clientY - elem.current.offsetTop) / CELL_SIZE);
+
+	return {x, y};
+}
+
 const reducer = (state, action) => {
 	switch(action.type) {
 		case 'UPDATE_GAME':
@@ -76,6 +83,7 @@ const initState = {
 }
 
 function GameBoard() {
+	const boardRef = createRef();
 	const [state, dispatch] = useReducer(reducer, initState);
 
 	// main game loop
@@ -111,7 +119,13 @@ function GameBoard() {
 
 	return (
     <div>
-      <div className="game-board" style={{ width: WIDTH, height: HEIGHT, backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`}} >
+      <div className="game-board" ref={boardRef}
+      	onClick={(ev) => {
+      		const {x, y} = getGridCoords(ev, boardRef);
+      		state.grid[y][x] = !state.grid[y][x];
+      		dispatch({type: 'UPDATE_GAME', grid: state.grid});
+      	}}
+      	style={{ width: WIDTH, height: HEIGHT, backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`}} >
         { state.cells.map(cell => <GameCell size={CELL_SIZE} x={cell.x} y={cell.y} key={`${cell.x},${cell.y}`} />) }
       </div>
       <div>
