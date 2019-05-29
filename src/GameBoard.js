@@ -1,6 +1,7 @@
 import React, { createRef, useEffect, useReducer } from 'react';
 import './GameBoard.css';
 import GameCell from './GameCell';
+import SelectionOverlay from './SelectionOverlay';
 
 const createGrid = (rows, cols, isRandom=false) => {
 	let grid = [];
@@ -68,7 +69,7 @@ const reducer = (state, action) => {
 	}
 }
 
-const WIDTH = 1200;
+const WIDTH = 800;
 const HEIGHT = 600;
 const CELL_SIZE = 5;
 const ROWS = HEIGHT / CELL_SIZE;
@@ -81,6 +82,8 @@ const initState = {
 	isRunning: false,
 	gameInterval: 100
 }
+
+let mouseDownX, mouseDownY;
 
 function GameBoard() {
 	const boardRef = createRef();
@@ -116,20 +119,35 @@ function GameBoard() {
 			}
 		}
 	}, [state.grid, state.gameInterval, state.isRunning]);
-
+	
 	return (
     <div>
-      <div className="game-board" ref={boardRef}
-      	onClick={(ev) => {
+      <div className="game-board" ref={boardRef} style={{ width: WIDTH, height: HEIGHT, backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`}}
+      	onMouseDown={ev => {
       		const {x, y} = getGridCoords(ev, boardRef);
-      		state.grid[y][x] = !state.grid[y][x];
-      		dispatch({type: 'UPDATE_GAME', grid: state.grid});
+      		mouseDownX = x;
+      		mouseDownY = y;
       	}}
-      	style={{ width: WIDTH, height: HEIGHT, backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`}} >
+      	onMouseUp={ev => {
+      		const {x, y} = getGridCoords(ev, boardRef);
+      		const beginX = Math.min(mouseDownX, x);
+      		const beginY = Math.min(mouseDownY, y);
+      		const endX = Math.max(mouseDownX, x);
+      		const endY = Math.max(mouseDownY, y);
+
+      		for (let y = beginY; y <= endY; y++){
+      			for (let x = beginX; x <= endX; x++){
+      				state.grid[y][x] = !state.grid[y][x];
+      			}
+      		}
+
+      		dispatch({type: 'UPDATE_GAME', grid: state.grid});
+      	}} >
+	    	<SelectionOverlay> </SelectionOverlay>
         { state.cells.map(cell => <GameCell size={CELL_SIZE} x={cell.x} y={cell.y} key={`${cell.x},${cell.y}`} />) }
       </div>
       <div>
-      	<span style={{fontSize: 'calc(10px + 1vmin)'}}>Game Interval:</span>
+      	<span style={{fontSize: 'calc(10px + 1vmin)'}}>Game Interval (ms):</span>
       	<input style={{marginLeft: '5px'}} value={state.gameInterval} onChange={ev => dispatch({type: 'SET_INTERVAL', gameInterval: ev.target.value})} />
       	<button className="button-control" onClick={() => dispatch({type: 'TOGGLE_RUNNING', isRunning: !state.isRunning})}> {state.isRunning ? 'Stop' : 'Start'} </button>
       	<button className="button-control" onClick={() => dispatch({type: 'UPDATE_GAME', grid: createGrid(ROWS, COLS, true)})}> Randomize </button>

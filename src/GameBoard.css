@@ -10,3 +10,8 @@
 .button-control {
 	margin-left: 10px;
 }
+
+.selection-overlay {
+	background-color: red;
+	display: none;
+}
